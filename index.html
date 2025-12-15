@@ -110,6 +110,54 @@ video {
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <script>
+    function playOKSound() {
+
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const osc = ctx.createOscillator();
+
+  const gain = ctx.createGain();
+
+ 
+
+  osc.type = "sine";
+
+  osc.frequency.value = 1000; // 高め＝ピッ
+
+  gain.gain.value = 0.2;
+
+ 
+
+  osc.connect(gain);
+
+  gain.connect(ctx.destination);
+
+ 
+
+  osc.start();
+
+  osc.stop(ctx.currentTime + 0.15); // 短音
+
+}
+
+ 
+
+function playNGSound() {
+
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const osc = ctx.createOscillator();
+
+  const gain = ctx.createGain();
+
+  osc.type = "square";
+  osc.frequency.value = 300; // 低め＝ビープ
+  gain.gain.value = 0.3;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.4); // 少し長め
+}
     const codeReader = new ZXing.BrowserBarcodeReader();
     let idA = null;
     let idB = null;
@@ -147,20 +195,57 @@ video {
     }
 
     function judge() {
-      const planned = document.getElementById("plannedTime").value;
-      const resultDiv = document.getElementById("result");
-      let ok = false;
 
-      if (planned === "00") {
-        ok = (idA === idB);
-      } else {
-        ok = (idA === idB && planned === timeB);
-      }
+  const planned = document.getElementById("plannedTime").value;
 
-      resultDiv.style.display = "block";
-      resultDiv.className = ok ? "ok" : "ng";
-      resultDiv.textContent = ok ? "一致（OK）" : "不一致（NG）";
-    }
+  const resultDiv = document.getElementById("result");
+
+  let ok = false;
+
+ 
+
+  if (planned === "00") {
+
+    ok = (idA === idB);
+
+  } else {
+
+    ok = (idA === idB && planned === timeB);
+
+  }
+
+ 
+
+  resultDiv.style.display = "block";
+
+  resultDiv.className = ok ? "ok" : "ng";
+
+  resultDiv.textContent = ok ? "一致（OK）" : "不一致（NG）";
+
+ 
+
+  if (ok) {
+
+    playOKSound();
+
+ 
+
+    // 1.5秒後に自動リセット
+
+    setTimeout(() => {
+
+      idA = null;
+
+      idB = null;
+
+      timeB = null;
+
+      resultDiv.style.display = "none";
+    }, 1500);
+  } else {
+    playNGSound();
+  }
+}
 
     function resetResult() {
       const resultDiv = document.getElementById("result");
