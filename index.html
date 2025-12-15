@@ -194,20 +194,13 @@ function playNGSound() {
         .catch(err => alert(err));
     }
 
-    function judge() {
-
+  function judge() {
   const planned = document.getElementById("plannedTime").value;
-
   const resultDiv = document.getElementById("result");
-
   let ok = false;
 
- 
-
   if (planned === "00") {
-
     ok = (idA === idB);
-
   } else {
 
     ok = (idA === idB && planned === timeB);
