@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>治験バーコード照合</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="BarcodeCheck">
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 16px;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    select, button {
+      width: 100%;
+      font-size: 18px;
+      padding: 12px;
+      margin: 8px 0;
+    }
+    #result {
+      margin-top: 16px;
+      padding: 20px;
+      font-size: 24px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 8px;
+      display: none;
+    }
+    .ok {
+      background: #c8f7c5;
+      color: #0a6b0a;
+    }
+    .ng {
+      background: #f7c5c5;
+      color: #8b0000;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>治験バーコード照合（シンプル版）</h1>
+
+  <label>予定時点</label>
+  <select id="plannedTime">
+    <option value="00">SCR</option>
+  </select>
+
+  <button onclick="scanA()">A（被験者名札）を読み取る</button>
+  <button onclick="scanB()">B（採血管）を読み取る</button>
+
+  <div id="result"></div>
+
+  <!-- ZXing library -->
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+  <script>
+    const codeReader = new ZXing.BrowserBarcodeReader();
+    let idA = null;
+    let idB = null;
+    let timeB = null;
+
+    const select = document.getElementById("plannedTime");
+    for (let i = 1; i <= 99; i++) {
+      const v = i.toString().padStart(2, "0");
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.text = v;
+      select.appendChild(opt);
+    }
+
+    function scanA() {
+      resetResult();
+      codeReader.decodeOnceFromVideoDevice(undefined, 'video')
+        .then(result => {
+          idA = result.text;
+          alert("A 読み取り: " + idA);
+        })
+        .catch(err => alert(err));
+    }
+
+    function scanB() {
+      resetResult();
+      codeReader.decodeOnceFromVideoDevice(undefined, 'video')
+        .then(result => {
+          const raw = result.text;
+          timeB = raw.slice(-2);
+          idB = raw.slice(0, -2);
+          judge();
+        })
+        .catch(err => alert(err));
+    }
+
+    function judge() {
+      const planned = document.getElementById("plannedTime").value;
+      const resultDiv = document.getElementById("result");
+      let ok = false;
+
+      if (planned === "00") {
+        ok = (idA === idB);
+      } else {
+        ok = (idA === idB && planned === timeB);
+      }
+
+      resultDiv.style.display = "block";
+      resultDiv.className = ok ? "ok" : "ng";
+      resultDiv.textContent = ok ? "一致（OK）" : "不一致（NG）";
+    }
+
+    function resetResult() {
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.display = "none";
+    }
+  </script>
+
+  <video id="video" style="display:none;"></video>
+</body>
+</html>
